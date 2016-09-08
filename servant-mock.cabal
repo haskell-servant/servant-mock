@@ -69,6 +69,7 @@ test-suite spec
   other-modules:
     Servant.MockSpec
   build-depends:
+    bytestring-conversion,
     base,
     hspec,
     hspec-wai,

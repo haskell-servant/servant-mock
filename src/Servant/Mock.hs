@@ -115,8 +115,10 @@ instance (KnownSymbol path, HasMock rest context) => HasMock (path :> rest) cont
 instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (Capture s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
+#if MIN_VERSION_servant(0,8,1)
 instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (CaptureAll s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
+#endif
 
 instance (AllCTUnrender ctypes a, HasMock rest context) => HasMock (ReqBody ctypes a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context

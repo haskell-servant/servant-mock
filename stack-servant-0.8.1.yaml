@@ -1,0 +1,8 @@
+flags: {}
+packages:
+- '.'
+extra-deps:
+- aeson-1.0.0.0
+- servant-0.8.1
+- servant-server-0.8.1
+resolver: nightly-2016-09-08

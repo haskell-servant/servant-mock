@@ -20,6 +20,9 @@ import           Servant
 import           Servant.API.Internal.Test.ComprehensiveAPI
 import           Servant.Mock
 
+import Data.ByteString.Conversion.To
+import Data.String
+
 -- This declaration simply checks that all instances are in place.
 _ = mock comprehensiveAPI (Proxy :: Proxy '[NamedContext "foo" '[]])
 
@@ -37,6 +40,10 @@ data TestHeader
   = TestHeader
   | ArbitraryHeader
   deriving (Show)
+
+-- Needed for servant-0.8.1
+instance ToByteString TestHeader where
+  builder = fromString . show
 
 instance ToHttpApiData TestHeader where
   toHeader = toHeader . show
