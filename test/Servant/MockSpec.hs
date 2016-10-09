@@ -13,7 +13,7 @@ import           GHC.Generics
 import           Network.Wai
 import           Servant.API
 import           Test.Hspec hiding (pending)
-import           Test.Hspec.Wai
+import           Test.Hspec.Wai hiding (Body)
 import           Test.QuickCheck
 
 import           Servant
@@ -64,7 +64,10 @@ spec = do
       with (return app) $ do
         it "serves arbitrary response bodies" $ do
           get "/" `shouldRespondWith` 200{
-            matchBody = Just $ Aeson.encode ArbitraryBody
+            matchBody = MatchBody $ \ _ b ->
+              if b == Aeson.encode ArbitraryBody
+                then Nothing
+                else Just ("body not correct\n")
           }
 
     context "response headers" $ do
@@ -77,7 +80,7 @@ spec = do
       with (toApp withHeader) $ do
         it "serves arbitrary response bodies" $ do
           get "/" `shouldRespondWith` 200{
-            matchHeaders = return $ MatchHeader $ \ h ->
+            matchHeaders = return $ MatchHeader $ \ h _ ->
              if h == [("Content-Type", "application/json"), ("foo", "ArbitraryHeader")]
                 then Nothing
                 else Just ("headers not correct\n")
@@ -86,7 +89,7 @@ spec = do
       with (toApp withoutHeader) $ do
         it "works for no additional headers" $ do
           get "/" `shouldRespondWith` 200{
-            matchHeaders = return $ MatchHeader $ \ h ->
+            matchHeaders = return $ MatchHeader $ \ h _ ->
              if h == [("Content-Type", "application/json")]
                 then Nothing
                 else Just ("headers not correct\n")
