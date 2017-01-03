@@ -1,14 +1,12 @@
-flags: {}
+resolver: nightly-2016-10-07
 packages:
 - '.'
 extra-deps:
-- aeson-0.11.2.1
-- servant-0.8
-- servant-server-0.8
 - hspec-wai-0.8.0
 - hspec-expectations-0.8.0
 - call-stack-0.1.0
 - hspec-2.3.1
 - hspec-discover-2.3.1
 - hspec-core-2.3.1
-resolver: nightly-2016-09-08
+flags: {}
+extra-package-dbs: []
