@@ -51,7 +51,7 @@ executable mock-app
     aeson,
     base,
     servant-mock,
-    servant-server,
+    servant-server >= 0.10,
     QuickCheck,
     warp
   if flag(example)

@@ -81,7 +81,7 @@ spec = do
         it "serves arbitrary response bodies" $ do
           get "/" `shouldRespondWith` 200{
             matchHeaders = return $ MatchHeader $ \ h _ ->
-             if h == [("Content-Type", "application/json"), ("foo", "ArbitraryHeader")]
+             if h == [("Content-Type", "application/json;charset=utf-8"), ("foo", "ArbitraryHeader")]
                 then Nothing
                 else Just ("headers not correct\n")
           }
@@ -90,7 +90,7 @@ spec = do
         it "works for no additional headers" $ do
           get "/" `shouldRespondWith` 200{
             matchHeaders = return $ MatchHeader $ \ h _ ->
-             if h == [("Content-Type", "application/json")]
+             if h == [("Content-Type", "application/json;charset=utf-8")]
                 then Nothing
                 else Just ("headers not correct\n")
           }
