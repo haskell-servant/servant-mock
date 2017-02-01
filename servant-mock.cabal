@@ -11,7 +11,7 @@ license-file:        LICENSE
 author:              Servant Contributors
 maintainer:          haskell-servant-maintainers@googlegroups.com
 copyright:           2015-2016 Servant Contributors
-category:            Web
+category:            Servant, Web
 build-type:          Simple
 extra-source-files:  README.md CHANGELOG.md include/*.h
 cabal-version:       >=1.10
