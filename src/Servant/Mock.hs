@@ -160,11 +160,20 @@ instance OVERLAPPING_
   mock _ _ = mockArbitrary
 
 instance HasMock Raw context where
+#if MIN_VERSION_servant(0,11,0)
+  mock _ _ = Tagged $ \_req respond -> do
+#else
   mock _ _ = \_req respond -> do
+#endif
     bdy <- genBody
     respond $ responseLBS status200 [] bdy
 
     where genBody = pack <$> generate (vector 100 :: Gen [Char])
+
+#if MIN_VERSION_servant(0,11,0)
+instance HasMock EmptyAPI context where
+    mock _ _ = emptyServer
+#endif
 
 instance (HasContextEntry context (NamedContext name subContext), HasMock rest subContext) =>
   HasMock (WithNamedContext name subContext rest) context where

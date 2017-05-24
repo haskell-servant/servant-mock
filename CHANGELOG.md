@@ -1,3 +1,9 @@
+0.8.2
+-----
+
+- Support for servant-0.11
+    Add `HasMock EmptyAPI` instance
+
 0.8.1.2
 -------
 

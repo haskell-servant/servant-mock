@@ -1,5 +1,5 @@
 name:                servant-mock
-version:             0.8.1.2
+version:             0.8.2
 synopsis:            Derive a mock server for free from your servant API types
 description:
   Derive a mock server for free from your servant API types
@@ -33,8 +33,8 @@ library
     base            >=4.7    && <5,
     bytestring      >=0.10.4 && <0.11,
     http-types      >=0.8    && <0.10,
-    servant         >=0.8    && <0.11,
-    servant-server  >=0.8    && <0.11,
+    servant         >=0.8    && <0.12,
+    servant-server  >=0.8    && <0.12,
     transformers    >=0.3    && <0.6,
     QuickCheck      >=2.7    && <2.10,
     wai             >=3.0    && <3.3
