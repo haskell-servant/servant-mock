@@ -74,6 +74,8 @@ test-suite spec
   main-is: Spec.hs
   other-modules:
     Servant.MockSpec
+  build-tool-depends:
+    hspec-discover:hspec-discover
   build-depends:
     bytestring-conversion,
     base,
