@@ -1,8 +1,15 @@
+0.3.3
+-----
+
+- Support for servant-0.12
+   - Add `HasMock (Description d :> api)` and `HasMock (Summary d :> api)`
+     instances
+
 0.8.2
 -----
 
 - Support for servant-0.11
-    Add `HasMock EmptyAPI` instance
+    - Add `HasMock EmptyAPI` instance
 
 0.8.1.2
 -------
