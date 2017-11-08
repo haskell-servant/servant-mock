@@ -1,9 +1,13 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+#if __GLASGOW_HASKELL__ == 708
+{-# OPTIONS_GHC -fcontext-stack=31 #-}
+#endif
 
 module Servant.MockSpec where
 

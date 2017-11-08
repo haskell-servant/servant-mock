@@ -175,6 +175,14 @@ instance HasMock EmptyAPI context where
     mock _ _ = emptyServer
 #endif
 
+#if MIN_VERSION_servant(0,12,0)
+instance HasMock api context => HasMock (Summary d :> api) context where
+    mock _ context = mock (Proxy :: Proxy api) context
+
+instance HasMock api context => HasMock (Description d :> api) context where
+    mock _ context = mock (Proxy :: Proxy api) context
+#endif
+
 instance (HasContextEntry context (NamedContext name subContext), HasMock rest subContext) =>
   HasMock (WithNamedContext name subContext rest) context where
 
