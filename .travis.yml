@@ -69,8 +69,8 @@ install:
       (cd "."; autoreconf -i);
     fi
   - rm -f cabal.project.freeze
-  - cabal new-build -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
-  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
+  - cabal new-build -w ${HC} --max-backjumps=25000 ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
+  - cabal new-build -w ${HC} --max-backjumps=25000 --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
   - rm -rf "."/.ghc.environment.* "."/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
 
@@ -90,26 +90,26 @@ script:
   - echo -en 'travis_fold:end:unpack\\r'
   - echo Building... && echo -en 'travis_fold:start:build\\r'
   # this builds all libraries and executables (without tests/benchmarks)
-  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks all
+  - cabal new-build -w ${HC} --max-backjumps=25000 --disable-tests --disable-benchmarks all
   - echo -en 'travis_fold:end:build\\r'
 
   - echo Building with installed constraints for package in global-db... && echo -en 'travis_fold:start:build-installed\\r'
   # Build with installed constraints for packages in global-db
-  - if $INSTALLED; then echo cabal new-build -w ${HC} --disable-tests --disable-benchmarks $(${HCPKG} list --global --simple-output --names-only | sed 's/\([a-zA-Z0-9-]\{1,\}\) */--constraint="\1 installed" /g') all | sh; else echo "Not building with installed constraints"; fi
+  - if $INSTALLED; then echo cabal new-build -w ${HC} --max-backjumps=25000 --disable-tests --disable-benchmarks $(${HCPKG} list --global --simple-output --names-only | sed 's/\([a-zA-Z0-9-]\{1,\}\) */--constraint="\1 installed" /g') all | sh; else echo "Not building with installed constraints"; fi
   - echo -en 'travis_fold:end:build-installed\\r'
 
   - echo Building with tests and benchmarks... && echo -en 'travis_fold:start:build-everything\\r'
   # build & run tests, build benchmarks
-  - cabal new-build -w ${HC} ${TEST} ${BENCH} all
+  - cabal new-build -w ${HC} --max-backjumps=25000 ${TEST} ${BENCH} all
   - echo -en 'travis_fold:end:build-everything\\r'
   - echo Testing... && echo -en 'travis_fold:start:test\\r'
-  - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${TEST} all; fi
+  - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} --max-backjumps=25000 ${TEST} all; fi
   - echo -en 'travis_fold:end:test\\r'
 
   - echo Haddock... && echo -en 'travis_fold:start:haddock\\r'
   # haddock
   - rm -rf ./dist-newstyle
-  - if $HADDOCK; then cabal new-haddock -w ${HC} --disable-tests --disable-benchmarks all; else echo "Skipping haddock generation";fi
+  - if $HADDOCK; then cabal new-haddock -w ${HC} --max-backjumps=25000 --disable-tests --disable-benchmarks all; else echo "Skipping haddock generation";fi
 
   - echo -en 'travis_fold:end:haddock\\r'
 # REGENDATA ["--branch","master","-o",".travis.yml","-f","servant-mock.cabal"]
