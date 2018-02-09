@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 #include "overlapping-compat.h"
@@ -56,9 +57,9 @@
 -- @
 module Servant.Mock ( HasMock(..) ) where
 
-#if !MIN_VERSION_base(4,8,0)
-import           Control.Applicative
-#endif
+import Prelude ()
+import Prelude.Compat
+
 import           Control.Monad.IO.Class
 import           Data.ByteString.Lazy.Char8 (pack)
 import           Data.Proxy
@@ -67,6 +68,7 @@ import           Network.HTTP.Types.Status
 import           Network.Wai
 import           Servant
 import           Servant.API.ContentTypes
+import           Servant.API.Modifiers
 import           Test.QuickCheck.Arbitrary  (Arbitrary (..), vector)
 import           Test.QuickCheck.Gen        (Gen, generate)
 
@@ -112,15 +114,14 @@ instance (HasMock a context, HasMock b context) => HasMock (a :<|> b) context wh
 instance (KnownSymbol path, HasMock rest context) => HasMock (path :> rest) context where
   mock _ = mock (Proxy :: Proxy rest)
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (Capture s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (Capture' mods s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-#if MIN_VERSION_servant(0,8,1)
 instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (CaptureAll s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
-#endif
 
-instance (AllCTUnrender ctypes a, HasMock rest context) => HasMock (ReqBody ctypes a :> rest) context where
+instance (AllCTUnrender ctypes a, HasMock rest context, SBoolI (FoldLenient mods))
+    => HasMock (ReqBody' mods ctypes a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance HasMock rest context => HasMock (RemoteHost :> rest) context where
@@ -135,8 +136,8 @@ instance HasMock rest context => HasMock (Vault :> rest) context where
 instance HasMock rest context => HasMock (HttpVersion :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context)
-      => HasMock (QueryParam s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldRequired mods), SBoolI (FoldLenient mods))
+      => HasMock (QueryParam' mods s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance (KnownSymbol s, FromHttpApiData a, HasMock rest context)
@@ -146,7 +147,8 @@ instance (KnownSymbol s, FromHttpApiData a, HasMock rest context)
 instance (KnownSymbol s, HasMock rest context) => HasMock (QueryFlag s :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-instance (KnownSymbol h, FromHttpApiData a, HasMock rest context) => HasMock (Header h a :> rest) context where
+instance (KnownSymbol h, FromHttpApiData a, HasMock rest context, SBoolI (FoldRequired mods), SBoolI (FoldLenient mods))
+    => HasMock (Header' mods h a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a)
@@ -160,28 +162,20 @@ instance OVERLAPPING_
   mock _ _ = mockArbitrary
 
 instance HasMock Raw context where
-#if MIN_VERSION_servant(0,11,0)
   mock _ _ = Tagged $ \_req respond -> do
-#else
-  mock _ _ = \_req respond -> do
-#endif
     bdy <- genBody
     respond $ responseLBS status200 [] bdy
 
     where genBody = pack <$> generate (vector 100 :: Gen [Char])
 
-#if MIN_VERSION_servant(0,11,0)
 instance HasMock EmptyAPI context where
     mock _ _ = emptyServer
-#endif
 
-#if MIN_VERSION_servant(0,12,0)
 instance HasMock api context => HasMock (Summary d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
 
 instance HasMock api context => HasMock (Description d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
-#endif
 
 instance (HasContextEntry context (NamedContext name subContext), HasMock rest subContext) =>
   HasMock (WithNamedContext name subContext rest) context where
