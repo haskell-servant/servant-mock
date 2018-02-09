@@ -1,4 +1,9 @@
-0.3.3
+0.8.4
+-----
+
+- Support for servant-0.13
+
+0.8.3
 -----
 
 - Support for servant-0.12
