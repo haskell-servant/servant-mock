@@ -5,9 +5,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
-#if __GLASGOW_HASKELL__ == 708
-{-# OPTIONS_GHC -fcontext-stack=31 #-}
-#endif
 
 module Servant.MockSpec where
 
@@ -21,7 +18,7 @@ import           Test.Hspec.Wai hiding (Body)
 import           Test.QuickCheck
 
 import           Servant
-import           Servant.API.Internal.Test.ComprehensiveAPI
+import           Servant.Test.ComprehensiveAPI
 import           Servant.Mock
 
 import Data.ByteString.Conversion.To
