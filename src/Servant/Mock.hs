@@ -124,6 +124,11 @@ instance (AllCTUnrender ctypes a, HasMock rest context, SBoolI (FoldLenient mods
     => HasMock (ReqBody' mods ctypes a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
+-- | @since 0.8.5
+instance (MimeUnrender ctype chunk, FramingUnrender fr, FromSourceIO chunk a, HasMock rest context)
+    => HasMock (StreamBody' mods fr ctype a :> rest) context where
+  mock _ context = \_ -> mock (Proxy :: Proxy rest) context
+
 instance HasMock rest context => HasMock (RemoteHost :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
@@ -153,6 +158,10 @@ instance (KnownSymbol h, FromHttpApiData a, HasMock rest context, SBoolI (FoldRe
 
 instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a)
     => HasMock (Verb method status ctypes a) context where
+  mock _ _ = mockArbitrary
+
+instance (Arbitrary a, KnownNat status, ReflectMethod method, MimeRender ctype chunk, FramingRender fr, ToSourceIO chunk a)
+    => HasMock (Stream method status fr ctype a) context where
   mock _ _ = mockArbitrary
 
 instance OVERLAPPING_
