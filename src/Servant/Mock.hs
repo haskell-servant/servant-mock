@@ -114,7 +114,7 @@ instance (HasMock a context, HasMock b context) => HasMock (a :<|> b) context wh
 instance (KnownSymbol path, HasMock rest context) => HasMock (path :> rest) context where
   mock _ = mock (Proxy :: Proxy rest)
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (Capture' mods s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldLenient mods)) => HasMock (Capture' mods s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (CaptureAll s a :> rest) context where
@@ -158,6 +158,9 @@ instance (KnownSymbol h, FromHttpApiData a, HasMock rest context, SBoolI (FoldRe
 
 instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a)
     => HasMock (Verb method status ctypes a) context where
+  mock _ _ = mockArbitrary
+
+instance (ReflectMethod method) => HasMock (NoContentVerb method) context where
   mock _ _ = mockArbitrary
 
 instance (Arbitrary a, KnownNat status, ReflectMethod method, MimeRender ctype chunk, FramingRender fr, ToSourceIO chunk a)
