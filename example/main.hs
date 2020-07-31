@@ -23,4 +23,4 @@ api :: Proxy API
 api = Proxy
 
 main :: IO ()
-main = run 8080 (serve api $ mock api Proxy)
+main = run 8080 (serve api $ mock api (Proxy :: Proxy '[]))

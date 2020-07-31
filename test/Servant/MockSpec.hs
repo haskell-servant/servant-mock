@@ -61,7 +61,7 @@ spec = do
     context "Get" $ do
       let api :: Proxy (Get '[JSON] Body)
           api = Proxy
-          app = serve api (mock api Proxy)
+          app = serve api (mock api (Proxy :: Proxy '[]))
       with (return app) $ do
         it "serves arbitrary response bodies" $ do
           get "/" `shouldRespondWith` 200{
