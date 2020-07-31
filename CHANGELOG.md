@@ -1,3 +1,12 @@
+0.8.7
+-----
+
+- Support for servant-0.18
+   - Hint for migration: if you get errors about `ambiguous type
+     variable ‘context0’ arising from a use of ‘mock’`, try calling
+     `mock` with explicit type information about the context: `mock
+     api (Proxy @'[])`, not `mock api Proxy`.
+
 0.8.6
 -----
 
