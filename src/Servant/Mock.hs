@@ -76,7 +76,11 @@ import           Test.QuickCheck.Gen        (Gen, generate)
 --   than turns them into random-response-generating
 --   request handlers, hence providing an instance for
 --   all the combinators of the core /servant/ library.
-class HasServer api context => HasMock api context where
+class (HasServer api context
+#if MIN_VERSION_servant_server(0,18,0)
+      , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+      ) => HasMock api context where
   -- | Calling this method creates request handlers of
   --   the right type to implement the API described by
   --   @api@ that just generate random response values of
@@ -156,32 +160,56 @@ instance (KnownSymbol h, FromHttpApiData a, HasMock rest context, SBoolI (FoldRe
     => HasMock (Header' mods h a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a)
+instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a
+#if MIN_VERSION_servant_server(0,18,0)
+         , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+         )
     => HasMock (Verb method status ctypes a) context where
   mock _ _ = mockArbitrary
 
-instance (ReflectMethod method) => HasMock (NoContentVerb method) context where
+instance (ReflectMethod method
+#if MIN_VERSION_servant_server(0,18,0)
+         , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+         ) => HasMock (NoContentVerb method) context where
   mock _ _ = mockArbitrary
 
-instance (Arbitrary a, KnownNat status, ReflectMethod method, MimeRender ctype chunk, FramingRender fr, ToSourceIO chunk a)
+instance (Arbitrary a, KnownNat status, ReflectMethod method, MimeRender ctype chunk, FramingRender fr, ToSourceIO chunk a
+#if MIN_VERSION_servant_server(0,18,0)
+         , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+         )
     => HasMock (Stream method status fr ctype a) context where
   mock _ _ = mockArbitrary
 
 instance OVERLAPPING_
     (GetHeaders (Headers headerTypes a), Arbitrary (HList headerTypes),
-     Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a)
+     Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes a
+#if MIN_VERSION_servant_server(0,18,0)
+    , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+    )
     => HasMock (Verb method status ctypes (Headers headerTypes a)) context where
   mock _ _ = mockArbitrary
 
-instance HasMock Raw context where
+instance
+#if MIN_VERSION_servant_server(0,18,0)
+    HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters =>
+#endif
+    HasMock Raw context where
   mock _ _ = Tagged $ \_req respond -> do
     bdy <- genBody
     respond $ responseLBS status200 [] bdy
 
     where genBody = pack <$> generate (vector 100 :: Gen [Char])
 
-instance HasMock EmptyAPI context where
-    mock _ _ = emptyServer
+instance
+#if MIN_VERSION_servant_server(0,18,0)
+    HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters =>
+#endif
+    HasMock EmptyAPI context where
+  mock _ _ = emptyServer
 
 instance HasMock api context => HasMock (Summary d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
@@ -189,7 +217,11 @@ instance HasMock api context => HasMock (Summary d :> api) context where
 instance HasMock api context => HasMock (Description d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
 
-instance (HasContextEntry context (NamedContext name subContext), HasMock rest subContext) =>
+instance ( HasContextEntry context (NamedContext name subContext)
+#if MIN_VERSION_servant_server(0,18,0)
+         , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
+#endif
+         , HasMock rest subContext) =>
   HasMock (WithNamedContext name subContext rest) context where
 
   mock _ _ = mock (Proxy :: Proxy rest) (Proxy :: Proxy subContext)
