@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds             #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -60,17 +61,27 @@ module Servant.Mock ( HasMock(..) ) where
 import Prelude ()
 import Prelude.Compat
 
-import           Control.Monad.IO.Class
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.ByteString.Lazy.Char8 (pack)
-import           Data.Proxy
+#if MIN_VERSION_servant_server(0,19,0)
+import           Data.SOP.BasicFunctors ((:.:) (Comp))
+import           Data.SOP.Constraint (All)
+import           Data.SOP.NP (cpure_NP)
+import           Data.SOP.NS (apInjs_NP, sequence'_NS)
+#endif
+import           Data.Typeable (Proxy (Proxy))
 import           GHC.TypeLits
 import           Network.HTTP.Types.Status
 import           Network.Wai
 import           Servant
 import           Servant.API.ContentTypes
 import           Servant.API.Modifiers
-import           Test.QuickCheck.Arbitrary  (Arbitrary (..), vector)
-import           Test.QuickCheck.Gen        (Gen, generate)
+#if MIN_VERSION_servant_server(0,19,0)
+import           Servant.API.UVerb (UVerb, Union)
+#endif
+import           Servant.Server (HasServer)
+import           Test.QuickCheck (Arbitrary (arbitrary), Gen, elements, generate)
+import           Test.QuickCheck.Arbitrary  (vector)
 
 -- | 'HasMock' defines an interpretation of API types
 --   than turns them into random-response-generating
@@ -167,6 +178,21 @@ instance (Arbitrary a, KnownNat status, ReflectMethod method, AllCTRender ctypes
          )
     => HasMock (Verb method status ctypes a) context where
   mock _ _ = mockArbitrary
+
+#if MIN_VERSION_servant_server(0,19,0)
+instance
+  ( All Arbitrary as,
+    HasContextEntry (ctx .++ DefaultErrorFormatters) ErrorFormatters,
+    HasServer (UVerb method cts as) ctx
+  ) =>
+  HasMock (UVerb method cts as) ctx
+  where
+  mock _ _ = liftIO (generate arbitraryNS)
+    where
+      arbitraryNS :: All Arbitrary as => Gen (Union as)
+      arbitraryNS =
+        sequence'_NS =<< elements (apInjs_NP (cpure_NP (Proxy @Arbitrary) (Comp arbitrary)))
+#endif
 
 instance (ReflectMethod method
 #if MIN_VERSION_servant_server(0,18,0)
