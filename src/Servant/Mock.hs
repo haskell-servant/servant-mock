@@ -198,9 +198,9 @@ instance
     HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters =>
 #endif
     HasMock Raw context where
-  mock _ _ = Tagged $ \_req respond -> do
+  mock _ _ = Tagged $ \_req _respond -> do
     bdy <- genBody
-    respond $ responseLBS status200 [] bdy
+    _respond $ responseLBS status200 [] bdy
 
     where genBody = pack <$> generate (vector 100 :: Gen [Char])
 
@@ -215,6 +215,9 @@ instance HasMock api context => HasMock (Summary d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
 
 instance HasMock api context => HasMock (Description d :> api) context where
+    mock _ context = mock (Proxy :: Proxy api) context
+
+instance (AtLeastOneFragment api, FragmentUnique (Fragment d :> api), HasMock api context) => HasMock (Fragment d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
 
 instance ( HasContextEntry context (NamedContext name subContext)
