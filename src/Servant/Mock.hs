@@ -63,6 +63,7 @@ import Prelude.Compat
 import           Control.Monad.IO.Class
 import           Data.ByteString.Lazy.Char8 (pack)
 import           Data.Proxy
+import           Data.Typeable
 import           GHC.TypeLits
 import           Network.HTTP.Types.Status
 import           Network.Wai
@@ -118,10 +119,10 @@ instance (HasMock a context, HasMock b context) => HasMock (a :<|> b) context wh
 instance (KnownSymbol path, HasMock rest context) => HasMock (path :> rest) context where
   mock _ = mock (Proxy :: Proxy rest)
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldLenient mods)) => HasMock (Capture' mods s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldLenient mods), Typeable a) => HasMock (Capture' mods s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (CaptureAll s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, Typeable a) => HasMock (CaptureAll s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance (AllCTUnrender ctypes a, HasMock rest context, SBoolI (FoldLenient mods))
