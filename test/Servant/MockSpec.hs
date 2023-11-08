@@ -8,6 +8,9 @@
 
 module Servant.MockSpec where
 
+#if MIN_VERSION_servant_server(0,20,0)
+import           Data.Acquire (Acquire)
+#endif
 import           Data.Aeson as Aeson
 import           Data.Proxy
 import           GHC.Generics
@@ -25,7 +28,11 @@ import Data.ByteString.Conversion.To
 import Data.String
 
 -- This declaration simply checks that all instances are in place.
-_ = mock comprehensiveAPI (Proxy :: Proxy '[NamedContext "foo" '[]])
+_ = mock comprehensiveAPI (Proxy :: Proxy '[NamedContext "foo" '[]
+#if MIN_VERSION_servant_server(0,20,0)
+    , Acquire Int
+#endif
+    ])
 
 data Body
   = Body

@@ -61,6 +61,9 @@ import Prelude ()
 import Prelude.Compat
 
 import           Control.Monad.IO.Class
+#if MIN_VERSION_servant_server(0,20,0)
+import           Data.Acquire (Acquire)
+#endif
 import           Data.ByteString.Lazy.Char8 (pack)
 import           Data.Proxy
 import           Data.Typeable (Typeable)
@@ -229,6 +232,11 @@ instance ( HasContextEntry context (NamedContext name subContext)
   HasMock (WithNamedContext name subContext rest) context where
 
   mock _ _ = mock (Proxy :: Proxy rest) (Proxy :: Proxy subContext)
+
+#if MIN_VERSION_servant_server(0,20,0)
+instance (HasMock api context, HasContextEntry context (Acquire r)) => HasMock (WithResource r :> api) context where
+  mock _ context = \_ -> mock (Proxy :: Proxy api) context
+#endif
 
 mockArbitrary :: (MonadIO m, Arbitrary a) => m a
 mockArbitrary = liftIO (generate arbitrary)
