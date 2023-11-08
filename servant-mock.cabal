@@ -87,7 +87,7 @@ test-suite spec
     bytestring-conversion,
     base,
     hspec,
-    hspec-wai >=0.9.0 && <0.11,
+    hspec-wai >=0.9.0 && <0.12,
     QuickCheck,
     resourcet,
     servant,
