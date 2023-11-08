@@ -61,8 +61,12 @@ import Prelude ()
 import Prelude.Compat
 
 import           Control.Monad.IO.Class
+#if MIN_VERSION_servant_server(0,20,0)
+import           Data.Acquire (Acquire)
+#endif
 import           Data.ByteString.Lazy.Char8 (pack)
 import           Data.Proxy
+import           Data.Typeable (Typeable)
 import           GHC.TypeLits
 import           Network.HTTP.Types.Status
 import           Network.Wai
@@ -118,10 +122,10 @@ instance (HasMock a context, HasMock b context) => HasMock (a :<|> b) context wh
 instance (KnownSymbol path, HasMock rest context) => HasMock (path :> rest) context where
   mock _ = mock (Proxy :: Proxy rest)
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldLenient mods)) => HasMock (Capture' mods s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, SBoolI (FoldLenient mods), Typeable a) => HasMock (Capture' mods s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
-instance (KnownSymbol s, FromHttpApiData a, HasMock rest context) => HasMock (CaptureAll s a :> rest) context where
+instance (KnownSymbol s, FromHttpApiData a, HasMock rest context, Typeable a) => HasMock (CaptureAll s a :> rest) context where
   mock _ context = \_ -> mock (Proxy :: Proxy rest) context
 
 instance (AllCTUnrender ctypes a, HasMock rest context, SBoolI (FoldLenient mods))
@@ -198,9 +202,9 @@ instance
     HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters =>
 #endif
     HasMock Raw context where
-  mock _ _ = Tagged $ \_req respond -> do
+  mock _ _ = Tagged $ \_req _respond -> do
     bdy <- genBody
-    respond $ responseLBS status200 [] bdy
+    _respond $ responseLBS status200 [] bdy
 
     where genBody = pack <$> generate (vector 100 :: Gen [Char])
 
@@ -217,6 +221,9 @@ instance HasMock api context => HasMock (Summary d :> api) context where
 instance HasMock api context => HasMock (Description d :> api) context where
     mock _ context = mock (Proxy :: Proxy api) context
 
+instance (AtLeastOneFragment api, FragmentUnique (Fragment d :> api), HasMock api context) => HasMock (Fragment d :> api) context where
+    mock _ context = mock (Proxy :: Proxy api) context
+
 instance ( HasContextEntry context (NamedContext name subContext)
 #if MIN_VERSION_servant_server(0,18,0)
          , HasContextEntry (context .++ DefaultErrorFormatters) ErrorFormatters
@@ -225,6 +232,11 @@ instance ( HasContextEntry context (NamedContext name subContext)
   HasMock (WithNamedContext name subContext rest) context where
 
   mock _ _ = mock (Proxy :: Proxy rest) (Proxy :: Proxy subContext)
+
+#if MIN_VERSION_servant_server(0,20,0)
+instance (HasMock api context, HasContextEntry context (Acquire r)) => HasMock (WithResource r :> api) context where
+  mock _ context = \_ -> mock (Proxy :: Proxy api) context
+#endif
 
 mockArbitrary :: (MonadIO m, Arbitrary a) => m a
 mockArbitrary = liftIO (generate arbitrary)
