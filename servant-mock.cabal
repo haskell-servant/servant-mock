@@ -25,6 +25,7 @@ tested-with:
    || ==8.8.1
    || ==8.10.4
    || ==9.0.1
+   || ==9.4.6
 
 extra-source-files:  README.md CHANGELOG.md include/*.h
 
